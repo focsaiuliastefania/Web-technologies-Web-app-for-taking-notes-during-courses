@@ -1,0 +1,15 @@
+# Ignoră folderele de dependențe
+/client/node_modules
+/server/node_modules
+
+# Ignoră fișierele de build
+/client/dist
+
+# Ignoră fișierele de configurare secrete
+/client/.env
+/server/.env
+
+# Ignoră fișiere de log npm
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
