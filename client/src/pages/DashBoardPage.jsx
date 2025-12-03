@@ -1,14 +1,13 @@
+//DashBoardPage.jsx
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import './Dashboard.css';
 
 function DashboardPage() {
   const [subjects, setSubjects] = useState([]);
   const [newSubject, setNewSubject] = useState({ name: '', professor: '' });
   const token = localStorage.getItem('authToken');
-  const navigate = useNavigate();
 
-  // 1. Definim și apelăm funcția DIRECT în useEffect
+  // --- AICI ERA PROBLEMA: Am mutat funcția ÎNĂUNTRU pentru a scăpa de erori ---
   useEffect(() => {
     const fetchSubjects = async () => {
       try {
@@ -25,9 +24,9 @@ function DashboardPage() {
     };
 
     fetchSubjects();
-  }, [token]);
+  }, [token]); 
 
-  // Funcție ajutătoare pentru reîncărcare (folosită la Add/Delete)
+  // Funcție separată pentru reîncărcare (folosită la Add/Delete)
   const reloadSubjects = async () => {
     try {
       const response = await fetch('http://localhost:8080/api/subjects', {
@@ -56,16 +55,15 @@ function DashboardPage() {
 
       if (response.ok) {
         setNewSubject({ name: '', professor: '' });
-        reloadSubjects();
+        reloadSubjects(); // Reîmprospătăm lista
       }
     } catch (error) {
       console.error(error);
     }
   };
 
-  const handleDelete = async (e, id) => {
-    e.stopPropagation();
-    if(!confirm('Are you sure you want to delete this subject?')) return;
+  const handleDelete = async (id) => {
+    if(!confirm('Ești sigur că vrei să ștergi această materie?')) return;
 
     try {
       await fetch(`http://localhost:8080/api/subjects/${id}`, {
@@ -74,7 +72,7 @@ function DashboardPage() {
           'Authorization': `Bearer ${token}`
         }
       });
-      reloadSubjects();
+      reloadSubjects(); 
     } catch (error) {
       console.error(error);
     }
@@ -83,47 +81,42 @@ function DashboardPage() {
   return (
     <div className="dashboard-container">
       <div className="dashboard-header">
-        <h1>Your Subjects</h1>
+        <h1>Materiile Tale</h1>
       </div>
 
       <form className="add-subject-form" onSubmit={handleAddSubject}>
         <div className="form-group">
-          <label>Subject Name</label>
+          <label>Nume Materie</label>
           <input 
             type="text" 
-            placeholder="Ex: Macroeconomics"
+            placeholder="Ex: Macroeconomie"
             value={newSubject.name}
             onChange={(e) => setNewSubject({...newSubject, name: e.target.value})}
           />
         </div>
         <div className="form-group">
-          <label>Professor (Optional)</label>
+          <label>Profesor (Opțional)</label>
           <input 
             type="text" 
-            placeholder="Ex: John Doe"
+            placeholder="Ex: Popescu Ion"
             value={newSubject.professor}
             onChange={(e) => setNewSubject({...newSubject, professor: e.target.value})}
           />
         </div>
-        <button type="submit" className="btn-add">+ Add</button>
+        <button type="submit" className="btn-add">+ Adaugă</button>
       </form>
 
       <div className="subjects-grid">
         {subjects.map((subject) => (
-          <div 
-            key={subject.id} 
-            className="subject-card" 
-            onClick={() => navigate(`/dashboard/subject/${subject.id}`, { state: { subjectName: subject.name } })}
-            style={{ cursor: 'pointer' }}
-          >
-            <button className="delete-btn" onClick={(e) => handleDelete(e, subject.id)}>×</button>
+          <div key={subject.id} className="subject-card">
+            <button className="delete-btn" onClick={() => handleDelete(subject.id)}>×</button>
             <h3>{subject.name}</h3>
             {subject.professor && <p className="professor-name">👨‍🏫 {subject.professor}</p>}
           </div>
         ))}
 
         {subjects.length === 0 && (
-          <p style={{ color: '#888' }}>You haven't added any subjects yet.</p>
+          <p style={{ color: '#888' }}>Nu ai adăugat nicio materie încă.</p>
         )}
       </div>
     </div>

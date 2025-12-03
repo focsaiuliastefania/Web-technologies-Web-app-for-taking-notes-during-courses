@@ -15,7 +15,7 @@ function Navbar() {
   return (
     <nav className="navbar">
       <Link to="/dashboard" className="navbar-brand">
-        📚 NoteASE
+        📚 Notes app for ASE students
       </Link>
 
       

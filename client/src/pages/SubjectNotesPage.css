@@ -1,171 +1,353 @@
-.notes-container {
-  padding: 1rem;
+html, body, #root {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  min-height: 100vh;
+  background-color: #fff0f5;
 }
 
-.notes-header {
-  margin-bottom: 2rem;
-  border-bottom: 2px solid #ecf0f1;
-  padding-bottom: 1rem;
+/* 1. CONTAINER CENTRAT */
+.notes-container {
   display: flex;
+  flex-direction: column;
+  align-items: center; /* Centrează totul orizontal */
+  width: 100%;
+  min-height: calc(100vh - 64px);
+  padding: 20px;
+  box-sizing: border-box;
+}
+
+/* 2. HEADER */
+.notes-header {
+  width: 100%;
+  max-width: 800px;
+  display: flex;
+  justify-content: space-between;
   align-items: center;
-  gap: 15px;
+  margin-bottom: 20px;
+}
+
+.notes-header h1 {
+    color: #c2185b;
+    margin: 0;
 }
 
 .back-btn {
-  background: none;
-  border: none;
-  color: #3498db;
+  background: white;
+  border: 1px solid #c2185b;
+  color: #c2185b;
+  padding: 8px 15px;
+  border-radius: 20px;
   cursor: pointer;
-  font-size: 1.2rem;
-  padding: 0;
   font-weight: bold;
+  transition: all 0.2s;
 }
 
 .back-btn:hover {
-  text-decoration: underline;
+    background-color: #c2185b;
+    color: white;
 }
 
-.add-note-form {
-  background: white;
-  padding: 1.5rem;
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-  margin-bottom: 2rem;
-  display: flex;
-  flex-direction: column;
-  gap: 15px;
-}
-
-.note-input {
-  padding: 10px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  font-size: 1rem;
-  width: 100%;
-}
-
-.note-textarea {
-  padding: 10px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  font-size: 1rem;
-  width: 100%;
-  min-height: 120px;
-  resize: vertical;
-  font-family: inherit;
-}
-
-.btn-save {
-  background-color: #3498db;
-  color: white;
-  border: none;
-  padding: 10px 20px;
-  border-radius: 4px;
-  cursor: pointer;
-  font-weight: bold;
-  align-self: flex-start;
-}
-
-.btn-save:hover {
-  background-color: #2980b9;
-}
-
-.notes-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 1.5rem;
-}
-
-.note-card {
-  background: #fff;
-  border: 1px solid #e0e0e0;
-  border-radius: 8px;
-  padding: 1.5rem;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-  transition: transform 0.2s;
-  position: relative;
-}
-
-.note-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-}
-
-.note-card h3 {
-  margin-top: 0;
-  color: #2c3e50;
-  font-size: 1.3rem;
-  margin-bottom: 10px;
-  border-bottom: 1px solid #eee;
-  padding-bottom: 5px;
-}
-
-.note-content {
-  color: #555;
-  white-space: pre-wrap; 
-  line-height: 1.6;
-}
-.delete-note-btn {
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  background: transparent;
-  border: none;
-  color: #e74c3c;
-  cursor: pointer;
-  font-size: 1.2rem;
-  opacity: 0.6;
-  padding: 0;
-}
-
-.delete-note-btn:hover {
-  opacity: 1;
-}
-
+/* 3. BARA DE CĂUTARE */
 .search-container {
+  width: 100%;
+  max-width: 800px;
   margin-bottom: 20px;
   display: flex;
   gap: 10px;
+  box-sizing: border-box;
 }
 
 .search-input {
   flex: 1;
   padding: 10px;
-  border: 1px solid #3498db;
-  border-radius: 4px;
+  border: 1px solid #e91e63;
+  border-radius: 6px;
   font-size: 1rem;
 }
 
-.btn-search {
-  background-color: #2c3e50;
-  color: white;
-  border: none;
-  padding: 10px 20px;
-  border-radius: 4px;
-  cursor: pointer;
+.search-input:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(233, 30, 99, 0.1);
 }
 
-.tags-input {
-  padding: 10px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  font-size: 0.9rem;
+.btn-search {
+  background-color: #c2185b;
+  color: white;
+  border: none;
+  padding: 10px 25px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: background-color 0.2s;
+}
+
+.btn-search:hover {
+    background-color: #e91e63;
+}
+
+/* 4. FORMULAR NOTIȚĂ */
+.add-note-form {
+  background-color: white;
+  padding: 25px;
+  border-radius: 8px;
+  box-shadow: 0 4px 15px rgba(233, 30, 99, 0.1);
+  margin-bottom: 40px;
+  border: 1px solid #f8bbd0;
+  
   width: 100%;
-  margin-top: 10px;
+  max-width: 800px; /* Centrat */
+  box-sizing: border-box;
+}
+
+.note-input, .tags-input {
+  width: 100%;
+  padding: 12px;
+  margin-bottom: 15px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 1.1rem;
+  box-sizing: border-box;
+}
+.note-input:focus, .tags-input:focus {
+    outline: none;
+    border-color: #e91e63;
+}
+
+.markdown-editor-wrapper {
+    margin-bottom: 15px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    overflow: hidden;
+}
+.editor-toolbar {
+    border-top: none !important;
+    border-left: none !important;
+    border-right: none !important;
+    background-color: #fff0f5 !important;
+    opacity: 1 !important;
+}
+.CodeMirror {
+    border: none !important;
+    min-height: 150px;
+}
+
+.file-input-wrapper {
+    margin-bottom: 15px;
+}
+.file-input-wrapper label {
+    color: #c2185b;
+    margin-bottom: 5px;
+    display: block;
+}
+
+.btn-save {
+  background-color: #e91e63;
+  color: white;
+  border: none;
+  padding: 12px 25px;
+  border-radius: 6px;
+  font-size: 1rem;
+  font-weight: bold;
+  cursor: pointer;
+  width: 100%;
+  transition: background-color 0.2s;
+}
+.btn-save:hover {
+    background-color: #c2185b;
+}
+
+/* 5. LISTA DE NOTIȚE (Una lângă alta) */
+.notes-grid {
+  display: grid;
+  /* Aceasta le pune una lângă alta automat */
+  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+  gap: 20px;
+  
+  width: 100%;
+  max-width: 800px; /* Aliniat cu restul */
+}
+
+.note-card {
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+  padding: 25px;
+  border: 1px solid #f8bbd0;
+  border-top: 5px solid #e91e63;
+  
+  /* Important pentru înălțime egală */
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  
+  transition: transform 0.2s;
+  box-sizing: border-box;
+}
+
+.note-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(233, 30, 99, 0.15);
+}
+
+.note-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 15px;
+  border-bottom: 2px solid #fff0f5;
+  padding-bottom: 10px;
+}
+
+.note-card-header h3 {
+  margin: 0;
+  color: #c2185b;
+  font-size: 1.4rem;
+  word-break: break-word; /* Previne ieșirea textului lung */
+}
+
+.delete-note-btn {
+  background: none;
+  border: none;
+  color: #ccc;
+  font-size: 1.5rem;
+  cursor: pointer;
+  padding: 0 5px;
+  transition: color 0.2s;
+}
+
+.delete-note-btn:hover {
+  color: #c2185b;
+}
+
+.note-content-preview {
+    font-size: 1rem;
+    line-height: 1.6;
+    color: #333;
+    flex-grow: 1; /* Împinge tag-urile jos */
 }
 
 .note-tags {
-  margin-top: 10px;
+  margin-top: 15px;
   display: flex;
   flex-wrap: wrap;
-  gap: 5px;
+  gap: 8px;
 }
 
 .tag-badge {
-  background-color: #e1f5fe;
-  color: #0277bd;
-  padding: 2px 8px;
-  border-radius: 12px;
-  font-size: 0.8rem;
+  background-color: #fff0f5;
+  color: #e91e63;
+  padding: 4px 12px;
+  border-radius: 15px;
+  font-size: 0.85rem;
   font-weight: bold;
+  border: 1px solid #f8bbd0;
+}
+
+.attachment-link {
+    display: inline-block;
+    margin-top: 15px;
+    padding: 8px 12px;
+    background-color: #e3f2fd;
+    color: #1976d2;
+    text-decoration: none;
+    font-weight: bold;
+    border-radius: 6px;
+    border: 1px solid #bbdefb;
+    transition: background-color 0.2s;
+}
+.attachment-link:hover {
+    background-color: #bbdefb;
+}
+
+/* 6. PAGINARE */
+.pagination-container {
+    margin-top: 40px;
+    padding: 15px 30px;
+    background: white;
+    border-radius: 50px;
+    border: 1px solid #f8bbd0;
+    
+    width: 100%;
+    max-width: 800px;
+    
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 30px;
+    box-sizing: border-box;
+}
+
+.items-per-page-selector label {
+    margin-right: 10px;
+    font-weight: bold;
+    color: #c2185b;
+}
+
+.items-per-page-selector select {
+    padding: 5px;
+    border: 1px solid #e91e63;
+    border-radius: 4px;
+}
+
+.pagination-controls {
+    display: flex;
+    gap: 15px;
+    align-items: center;
+}
+
+.pagination-btn {
+    padding: 8px 20px;
+    border: 1px solid #e91e63;
+    background-color: white;
+    color: #e91e63;
+    border-radius: 20px;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+.pagination-btn:not(:disabled):hover {
+    background-color: #e91e63;
+    color: white;
+}
+
+.pagination-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    border-color: #ddd;
+    color: #999;
+}
+
+.page-info {
+    font-weight: bold;
+    color: #c2185b;
+}
+
+@media (max-width: 768px) {
+  .notes-header {
+    flex-direction: column;
+    align-items: center;
+    gap: 15px;
+    text-align: center;
+  }
+  
+  .search-container {
+      flex-direction: column;
+  }
+  .btn-search {
+      width: 100%;
+  }
+
+  .note-card {
+    padding: 15px;
+  }
+  
+  .notes-grid {
+      grid-template-columns: 1fr; /* O singură coloană pe mobil */
+  }
+
+  .pagination-container {
+      flex-direction: column;
+      border-radius: 15px;
+  }
 }

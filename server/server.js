@@ -1,15 +1,11 @@
 const express = require('express');
 const sequelize = require('./db');
-const { Op } = require('sequelize');
 const User = require('./models/User');
 const Subject = require('./models/Subject');
 const Note = require('./models/Note');
 const passport = require('passport');
 const jwt = require('jsonwebtoken');
 const cors = require('cors');
-const multer = require('multer');
-const path = require('path');
-const fs = require('fs');
 
 require('dotenv').config();
 require('./authentication.js');
@@ -23,22 +19,6 @@ app.use(cors({
 }));
 
 app.use(express.json());
-
-const uploadDir = path.join(__dirname, 'uploads');
-if (!fs.existsSync(uploadDir)){
-    fs.mkdirSync(uploadDir);
-}
-app.use('/uploads', express.static(uploadDir));
-
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, 'uploads/')
-  },
-  filename: function (req, file, cb) {
-    cb(null, Date.now() + '-' + file.originalname)
-  }
-});
-const upload = multer({ storage: storage });
 
 const PORT = process.env.PORT || 8080;
 
@@ -142,23 +122,8 @@ app.get('/api/subjects/:subjectId/notes', authenticateToken, async (req, res) =>
     });
     if (!subject) return res.status(404).json({ message: "Subject not found" });
 
-    const { search } = req.query;
-    
-    let whereClause = { subjectId: req.params.subjectId };
-
-    if (search) {
-        whereClause = {
-            ...whereClause,
-            [Op.or]: [
-                { title: { [Op.iLike]: `%${search}%` } },
-                { content: { [Op.iLike]: `%${search}%` } },
-                { tags: { [Op.iLike]: `%${search}%` } }
-            ]
-        };
-    }
-
     const notes = await Note.findAll({
-      where: whereClause
+      where: { subjectId: req.params.subjectId }
     });
     res.json(notes);
   } catch (error) {
@@ -166,7 +131,7 @@ app.get('/api/subjects/:subjectId/notes', authenticateToken, async (req, res) =>
   }
 });
 
-app.post('/api/subjects/:subjectId/notes', authenticateToken, upload.single('file'), async (req, res) => {
+app.post('/api/subjects/:subjectId/notes', authenticateToken, async (req, res) => {
   try {
     const subject = await Subject.findOne({ 
       where: { id: req.params.subjectId, userId: req.user.id } 
@@ -174,13 +139,10 @@ app.post('/api/subjects/:subjectId/notes', authenticateToken, upload.single('fil
     if (!subject) return res.status(404).json({ message: "Subject not found" });
 
     const { title, content, tags } = req.body;
-    const attachmentUrl = req.file ? `/uploads/${req.file.filename}` : null;
-
     const newNote = await Note.create({
       title,
       content,
       tags,
-      attachmentUrl,
       subjectId: req.params.subjectId
     });
     res.json(newNote);
@@ -190,24 +152,15 @@ app.post('/api/subjects/:subjectId/notes', authenticateToken, upload.single('fil
 });
 
 app.delete('/api/notes/:id', authenticateToken, async (req, res) => {
-  try {
-    const note = await Note.findOne({
-        where: { id: req.params.id },
-        include: {
-            model: Subject,
-            where: { userId: req.user.id } 
-        }
-    });
-
-    if (!note) {
-        return res.status(404).json({ message: "Note not found or unauthorized" });
+    try {
+        const result = await Note.destroy({
+            where: { id: req.params.id }
+        });
+        if (result) res.json({ message: "Note deleted" });
+        else res.status(404).json({ message: "Note not found" });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
     }
-
-    await note.destroy();
-    res.json({ message: "Note deleted" });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
 });
 
 app.listen(PORT, () => {

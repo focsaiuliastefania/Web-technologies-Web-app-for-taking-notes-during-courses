@@ -1,5 +1,5 @@
 const { DataTypes } = require('sequelize');
-const sequelize = require('../db');
+const sequelize = require('../db'); 
 
 const Note = sequelize.define('Note', {
   title: {
@@ -10,6 +10,7 @@ const Note = sequelize.define('Note', {
     type: DataTypes.TEXT,
     allowNull: true
   },
+  
   attachmentUrl: {
     type: DataTypes.STRING,
     allowNull: true

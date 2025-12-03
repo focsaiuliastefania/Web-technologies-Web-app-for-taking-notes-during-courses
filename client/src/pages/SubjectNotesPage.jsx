@@ -21,34 +21,16 @@ function SubjectNotesPage() {
   const subjectName = location.state?.subjectName || 'Subject';
   
   const [notes, setNotes] = useState([]);
+  // Am scos 'file' si 'setFile' pentru ca nu le folosim momentan
   const [newNote, setNewNote] = useState({ title: '', content: '', tags: '' });
-  const [file, setFile] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const token = localStorage.getItem('authToken');
 
-  // --- 1. ÎNCĂRCARE INIȚIALĂ (Fără erori de useEffect) ---
-  useEffect(() => {
-    const loadInitialNotes = async () => {
-      try {
-        const response = await fetch(`http://localhost:8080/api/subjects/${subjectId}/notes`, {
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
-        });
-        if (response.ok) {
-          const data = await response.json();
-          setNotes(data);
-        }
-      } catch (error) {
-        console.error(error);
-      }
-    };
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(16);
 
-    loadInitialNotes();
-  }, [subjectId, token]); // Depinde doar de ID și token (valori stabile)
-
-  // --- 2. FUNCȚIE PENTRU REÎNCĂRCARE MANUALĂ (Căutare/Add/Delete) ---
-  const reloadNotes = async (query = '') => {
+  // Folosim useCallback pentru ca functia sa nu se recreeze la fiecare render
+  const fetchData = useCallback(async (query = '') => {
     try {
       let url = `http://localhost:8080/api/subjects/${subjectId}/notes`;
       if (query) {
@@ -67,11 +49,37 @@ function SubjectNotesPage() {
     } catch (error) {
       console.error(error);
     }
+  }, [subjectId, token]);
+
+  // ✅ REPARATIE: Scoatem fetchData din dependinte pentru a evita bucla
+  // Adaugam comentariul eslint-disable pentru a ignora avertismentul strict
+  useEffect(() => {
+    fetchData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [subjectId]); 
+
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentNotes = notes.slice(indexOfFirstItem, indexOfLastItem);
+  const totalPages = Math.ceil(notes.length / itemsPerPage);
+
+  const nextPage = () => {
+      if (currentPage < totalPages) setCurrentPage(currentPage + 1);
+  };
+
+  const prevPage = () => {
+      if (currentPage > 1) setCurrentPage(currentPage - 1);
+  };
+
+  const handleItemsPerPageChange = (e) => {
+      setItemsPerPage(Number(e.target.value));
+      setCurrentPage(1); 
   };
 
   const handleSearch = (e) => {
     e.preventDefault();
-    reloadNotes(searchQuery);
+    fetchData(searchQuery);
+    setCurrentPage(1);
   };
 
   const handleAddNote = async (e) => {
@@ -79,26 +87,25 @@ function SubjectNotesPage() {
     if (!newNote.title) return;
 
     try {
-      const formData = new FormData();
-      formData.append('title', newNote.title);
-      formData.append('content', newNote.content);
-      formData.append('tags', newNote.tags);
-      if (file) {
-        formData.append('file', file);
-      }
+      const payload = {
+        title: newNote.title,
+        content: newNote.content,
+        tags: newNote.tags
+      };
 
       const response = await fetch(`http://localhost:8080/api/subjects/${subjectId}/notes`, {
         method: 'POST',
         headers: {
+          'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
-        body: formData
+        body: JSON.stringify(payload)
       });
 
       if (response.ok) {
         setNewNote({ title: '', content: '', tags: '' });
-        setFile(null);
-        reloadNotes(searchQuery); 
+        // Am scos setFile(null)
+        fetchData(searchQuery); 
       }
     } catch (error) {
       console.error(error);
@@ -117,7 +124,13 @@ function SubjectNotesPage() {
       });
 
       if (response.ok) {
-        setNotes(notes.filter(n => n.id !== noteId));
+        const updatedNotes = notes.filter(n => n.id !== noteId);
+        setNotes(updatedNotes);
+        
+        const newTotalPages = Math.ceil(updatedNotes.length / itemsPerPage);
+        if (currentPage > newTotalPages && newTotalPages > 0) {
+            setCurrentPage(newTotalPages);
+        }
       }
     } catch (error) {
       console.error(error);
@@ -173,20 +186,13 @@ function SubjectNotesPage() {
           onChange={(e) => setNewNote({ ...newNote, tags: e.target.value })}
         />
 
-        <div className="file-input-wrapper">
-            <label style={{display: 'block', marginBottom: '5px', fontWeight: 'bold'}}>Attachment (Optional):</label>
-            <input 
-                type="file" 
-                onChange={(e) => setFile(e.target.files[0])}
-                style={{marginBottom: '10px'}}
-            />
-        </div>
+        {/* Am scos input-ul de tip fisier momentan */}
 
         <button type="submit" className="btn-save">Save Note</button>
       </form>
 
       <div className="notes-grid">
-        {notes.map((note) => (
+        {currentNotes.map((note) => (
           <div key={note.id} className="note-card">
             <div className="note-card-header">
                 <h3>{note.title}</h3>
@@ -209,14 +215,15 @@ function SubjectNotesPage() {
                 ))}
               </div>
             )}
-
+            
+            {/* Sectiunea de atasamente ramane doar pentru afisare daca exista deja in baza de date */}
             {note.attachmentUrl && (
                 <div style={{marginTop: '15px', paddingTop: '10px', borderTop: '1px dashed #eee'}}>
                     <a 
                         href={`http://localhost:8080${note.attachmentUrl}`} 
                         target="_blank" 
                         rel="noopener noreferrer"
-                        style={{color: '#3498db', textDecoration: 'none', fontWeight: 'bold'}}
+                        className="attachment-link"
                     >
                         📎 View Attachment
                     </a>
@@ -224,8 +231,34 @@ function SubjectNotesPage() {
             )}
           </div>
         ))}
-        {notes.length === 0 && <p style={{ color: '#888' }}>No notes found.</p>}
+        {notes.length === 0 && <p style={{ color: '#888', fontStyle: 'italic' }}>No notes found.</p>}
       </div>
+
+      {notes.length > 0 && (
+        <div className="pagination-container">
+            <div className="items-per-page-selector">
+                <label htmlFor="itemsPerPageNotes">Notes per page:</label>
+                <select id="itemsPerPageNotes" value={itemsPerPage} onChange={handleItemsPerPageChange}>
+                    <option value={1}>1</option>
+                    <option value={16}>16</option>
+                    <option value={24}>24</option>
+                    <option value={notes.length > 0 ? notes.length : 16}>All ({notes.length})</option> 
+                </select>
+            </div>
+
+            <div className="pagination-controls">
+                <button className="pagination-btn" onClick={prevPage} disabled={currentPage === 1}>
+                    &larr; Prev
+                </button>
+                <span className="page-info">
+                    Page {currentPage} of {totalPages || 1}
+                </span>
+                <button className="pagination-btn" onClick={nextPage} disabled={currentPage === totalPages || totalPages === 0}>
+                    Next &rarr;
+                </button>
+            </div>
+        </div>
+      )}
     </div>
   );
 }

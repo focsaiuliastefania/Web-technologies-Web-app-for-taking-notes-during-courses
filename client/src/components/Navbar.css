@@ -1,65 +1,87 @@
-/* client/src/components/Navbar.css */
+:root {
+  --pink-dark: #c2185b;
+  --pink-medium: #e91e63;
+  --pink-light: #f8bbd0;
+  --pink-bg: #fff0f5;
+  --text-on-pink: #ffffff;
+}
 
 .navbar {
-  background-color: #2c3e50; 
-  color: white;
+  width: 100%; /* Ocupă toată lățimea ecranului */
+  box-sizing: border-box; /* Asigură că padding-ul nu lățește bara peste 100% */
+  background-color: var(--pink-dark);
+  color: var(--text-on-pink);
   padding: 1rem 2rem;
   display: flex;
-  justify-content: space-between; 
+  justify-content: space-between;
   align-items: center;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.2); 
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  
+  /* Opțional: Poziție fixă dacă vrei să rămână sus când dai scroll */
+  /* position: sticky; top: 0; z-index: 1000; */
 }
 
 .navbar-brand {
   font-size: 1.5rem;
   font-weight: bold;
-  color: white;
+  color: var(--text-on-pink);
   text-decoration: none;
-}
-
-.logout-btn {
-  background-color: #e74c3c;
-  color: white;
-  border: none;
-  padding: 0.5rem 1rem;
-  border-radius: 5px;
-  cursor: pointer;
-  font-weight: bold;
-  transition: background 0.3s;
-}
-
-.logout-btn:hover {
-  background-color: #c0392b; 
-}
-
-.navbar {
-  background-color: #2c3e50;
-  color: white;
-  padding: 1rem 2rem;
   display: flex;
-  justify-content: space-between; 
   align-items: center;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.2); 
+  gap: 10px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-.navbar-brand {
-  font-size: 1.5rem;
-  font-weight: bold;
-  color: white;
+.navbar-menu {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.login-link {
+  color: var(--text-on-pink);
   text-decoration: none;
+  font-weight: bold;
 }
 
 .logout-btn {
-  background-color: #e74c3c; 
-  color: white;
+  background-color: var(--pink-medium);
+  color: var(--text-on-pink);
   border: none;
   padding: 0.5rem 1rem;
-  border-radius: 5px;
+  border-radius: 4px;
   cursor: pointer;
   font-weight: bold;
-  transition: background 0.3s;
+  transition: background-color 0.2s;
 }
 
 .logout-btn:hover {
-  background-color: #c0392b; 
+  background-color: #d81b60;
+}
+
+@media (max-width: 600px) {
+  .navbar {
+    padding: 0.8rem 1rem;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .navbar-brand {
+    font-size: 1.2rem;
+    white-space: normal;
+    text-align: center;
+  }
+  
+  .navbar-menu {
+      width: 100%;
+      display: flex;
+      justify-content: center;
+  }
+
+  .logout-btn {
+    width: 100%;
+    padding: 0.6rem;
+  }
 }
