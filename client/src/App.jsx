@@ -37,7 +37,7 @@ function App() {
         />
 
         <Route 
-          path="/dashboard/subject/:subjectId" 
+          path="/subjects/:subjectId/notes" 
           element={
             <ProtectedRoute>
               <Layout>

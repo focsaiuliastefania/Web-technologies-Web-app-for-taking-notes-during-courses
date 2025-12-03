@@ -1,13 +1,13 @@
-//DashBoardPage.jsx
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import './Dashboard.css';
 
 function DashboardPage() {
   const [subjects, setSubjects] = useState([]);
   const [newSubject, setNewSubject] = useState({ name: '', professor: '' });
   const token = localStorage.getItem('authToken');
+  const navigate = useNavigate();
 
-  // --- AICI ERA PROBLEMA: Am mutat funcția ÎNĂUNTRU pentru a scăpa de erori ---
   useEffect(() => {
     const fetchSubjects = async () => {
       try {
@@ -24,9 +24,8 @@ function DashboardPage() {
     };
 
     fetchSubjects();
-  }, [token]); 
+  }, [token]);
 
-  // Funcție separată pentru reîncărcare (folosită la Add/Delete)
   const reloadSubjects = async () => {
     try {
       const response = await fetch('http://localhost:8080/api/subjects', {
@@ -55,7 +54,7 @@ function DashboardPage() {
 
       if (response.ok) {
         setNewSubject({ name: '', professor: '' });
-        reloadSubjects(); // Reîmprospătăm lista
+        reloadSubjects();
       }
     } catch (error) {
       console.error(error);
@@ -63,7 +62,7 @@ function DashboardPage() {
   };
 
   const handleDelete = async (id) => {
-    if(!confirm('Ești sigur că vrei să ștergi această materie?')) return;
+    if(!confirm('Are you sure you want to delete this subject?')) return;
 
     try {
       await fetch(`http://localhost:8080/api/subjects/${id}`, {
@@ -72,51 +71,70 @@ function DashboardPage() {
           'Authorization': `Bearer ${token}`
         }
       });
-      reloadSubjects(); 
+      reloadSubjects();
     } catch (error) {
       console.error(error);
     }
   };
 
+  const handleCardClick = (subject) => {
+    navigate(`/subjects/${subject.id}/notes`, {
+        state: { subjectName: subject.name }
+    });
+  };
+
   return (
     <div className="dashboard-container">
       <div className="dashboard-header">
-        <h1>Materiile Tale</h1>
+        <h1>Your Subjects</h1>
       </div>
 
       <form className="add-subject-form" onSubmit={handleAddSubject}>
         <div className="form-group">
-          <label>Nume Materie</label>
+          <label>Subject Name</label>
           <input 
             type="text" 
-            placeholder="Ex: Macroeconomie"
+            placeholder="Ex: Macroeconomics"
             value={newSubject.name}
             onChange={(e) => setNewSubject({...newSubject, name: e.target.value})}
           />
         </div>
         <div className="form-group">
-          <label>Profesor (Opțional)</label>
+          <label>Professor (Optional)</label>
           <input 
             type="text" 
-            placeholder="Ex: Popescu Ion"
+            placeholder="Ex: John Doe"
             value={newSubject.professor}
             onChange={(e) => setNewSubject({...newSubject, professor: e.target.value})}
           />
         </div>
-        <button type="submit" className="btn-add">+ Adaugă</button>
+        <button type="submit" className="btn-add">+ Add</button>
       </form>
 
       <div className="subjects-grid">
         {subjects.map((subject) => (
-          <div key={subject.id} className="subject-card">
-            <button className="delete-btn" onClick={() => handleDelete(subject.id)}>×</button>
+          <div 
+            key={subject.id} 
+            className="subject-card" 
+            onClick={() => handleCardClick(subject)}
+            style={{ cursor: 'pointer' }}
+          >
+            <button 
+                className="delete-btn" 
+                onClick={(e) => {
+                    e.stopPropagation();
+                    handleDelete(subject.id);
+                }}
+            >
+                ×
+            </button>
             <h3>{subject.name}</h3>
             {subject.professor && <p className="professor-name">👨‍🏫 {subject.professor}</p>}
           </div>
         ))}
 
         {subjects.length === 0 && (
-          <p style={{ color: '#888' }}>Nu ai adăugat nicio materie încă.</p>
+          <p style={{ color: '#888' }}>You haven't added any subjects yet.</p>
         )}
       </div>
     </div>
