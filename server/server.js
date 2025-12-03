@@ -1,18 +1,52 @@
-// In /server/server.js
-
 const express = require('express');
 const sequelize = require('./db');
-
-const User = require('./models/user'); 
+const { Op } = require('sequelize');
+const User = require('./models/User');
+const Subject = require('./models/Subject');
+const Note = require('./models/Note');
 const passport = require('passport');
 const jwt = require('jsonwebtoken');
+const cors = require('cors');
+const multer = require('multer');
+const path = require('path');
+const fs = require('fs');
 
 require('dotenv').config();
-require('./authentication.js'); 
+require('./authentication.js');
 
 const app = express();
 
-const PORT = process.env.PORT || 8080; 
+app.use(cors({
+  origin: 'http://localhost:5173',
+  methods: ['GET', 'POST', 'DELETE', 'PUT'],
+  credentials: true
+}));
+
+app.use(express.json());
+
+const uploadDir = path.join(__dirname, 'uploads');
+if (!fs.existsSync(uploadDir)){
+    fs.mkdirSync(uploadDir);
+}
+app.use('/uploads', express.static(uploadDir));
+
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, 'uploads/')
+  },
+  filename: function (req, file, cb) {
+    cb(null, Date.now() + '-' + file.originalname)
+  }
+});
+const upload = multer({ storage: storage });
+
+const PORT = process.env.PORT || 8080;
+
+User.hasMany(Subject, { foreignKey: 'userId' });
+Subject.belongsTo(User, { foreignKey: 'userId' });
+
+Subject.hasMany(Note, { foreignKey: 'subjectId', onDelete: 'CASCADE' });
+Note.belongsTo(Subject, { foreignKey: 'subjectId' });
 
 async function setupDatabase() {
   try {
@@ -25,19 +59,30 @@ async function setupDatabase() {
   }
 }
 
+function authenticateToken(req, res, next) {
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1];
+
+  if (token == null) return res.sendStatus(401);
+
+  jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
+    if (err) return res.sendStatus(403);
+    req.user = user;
+    next();
+  });
+}
 
 app.get('/api/auth/google',
-  passport.authenticate('google', { 
+  passport.authenticate('google', {
     scope: ['profile', 'email'],
-    session: false 
+    session: false
   })
 );
 
-app.get('/api/auth/google/callback', 
-  passport.authenticate('google', { 
-   
+app.get('/api/auth/google/callback',
+  passport.authenticate('google', {
     failureRedirect: 'http://localhost:5173/login?error=true',
-    session: false 
+    session: false
   }),
   (req, res) => {
     const token = jwt.sign(
@@ -45,12 +90,127 @@ app.get('/api/auth/google/callback',
       process.env.JWT_SECRET,
       { expiresIn: '1d' }
     );
-   
     res.redirect(`http://localhost:5173/auth-success?token=${token}`);
   }
 );
 
+app.get('/api/subjects', authenticateToken, async (req, res) => {
+  try {
+    const subjects = await Subject.findAll({
+      where: { userId: req.user.id }
+    });
+    res.json(subjects);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.post('/api/subjects', authenticateToken, async (req, res) => {
+  try {
+    const { name, professor, description } = req.body;
+    const newSubject = await Subject.create({
+      name,
+      professor,
+      description,
+      userId: req.user.id
+    });
+    res.json(newSubject);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.delete('/api/subjects/:id', authenticateToken, async (req, res) => {
+  try {
+    const result = await Subject.destroy({
+      where: {
+        id: req.params.id,
+        userId: req.user.id
+      }
+    });
+    if (result) res.json({ message: "Subject deleted" });
+    else res.status(404).json({ message: "Subject not found" });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.get('/api/subjects/:subjectId/notes', authenticateToken, async (req, res) => {
+  try {
+    const subject = await Subject.findOne({ 
+      where: { id: req.params.subjectId, userId: req.user.id } 
+    });
+    if (!subject) return res.status(404).json({ message: "Subject not found" });
+
+    const { search } = req.query;
+    
+    let whereClause = { subjectId: req.params.subjectId };
+
+    if (search) {
+        whereClause = {
+            ...whereClause,
+            [Op.or]: [
+                { title: { [Op.iLike]: `%${search}%` } },
+                { content: { [Op.iLike]: `%${search}%` } },
+                { tags: { [Op.iLike]: `%${search}%` } }
+            ]
+        };
+    }
+
+    const notes = await Note.findAll({
+      where: whereClause
+    });
+    res.json(notes);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.post('/api/subjects/:subjectId/notes', authenticateToken, upload.single('file'), async (req, res) => {
+  try {
+    const subject = await Subject.findOne({ 
+      where: { id: req.params.subjectId, userId: req.user.id } 
+    });
+    if (!subject) return res.status(404).json({ message: "Subject not found" });
+
+    const { title, content, tags } = req.body;
+    const attachmentUrl = req.file ? `/uploads/${req.file.filename}` : null;
+
+    const newNote = await Note.create({
+      title,
+      content,
+      tags,
+      attachmentUrl,
+      subjectId: req.params.subjectId
+    });
+    res.json(newNote);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.delete('/api/notes/:id', authenticateToken, async (req, res) => {
+  try {
+    const note = await Note.findOne({
+        where: { id: req.params.id },
+        include: {
+            model: Subject,
+            where: { userId: req.user.id } 
+        }
+    });
+
+    if (!note) {
+        return res.status(404).json({ message: "Note not found or unauthorized" });
+    }
+
+    await note.destroy();
+    res.json({ message: "Note deleted" });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 app.listen(PORT, () => {
   console.log(`The server is on port ${PORT}`);
-  setupDatabase(); 
+  setupDatabase();
 });
