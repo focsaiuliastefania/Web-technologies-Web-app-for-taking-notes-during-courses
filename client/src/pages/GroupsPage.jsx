@@ -9,6 +9,7 @@ function GroupsPage() {
   const [newGroup, setNewGroup] = useState({ name: '', description: '' });
   const [selectedGroup, setSelectedGroup] = useState(null);
   const [groupNotes, setGroupNotes] = useState([]);
+  const [groupMembers, setGroupMembers] = useState([]);
   const [newMemberEmail, setNewMemberEmail] = useState('');
   const [message, setMessage] = useState('');
   const [selectedNote, setSelectedNote] = useState(null);
@@ -76,16 +77,22 @@ function GroupsPage() {
     setSelectedGroup(group);
     setMessage('');
     setSelectedNote(null);
+    setGroupMembers([]);
     try {
-      const response = await fetch(`http://localhost:8080/api/groups/${group.id}/notes`, {
+      const responseNotes = await fetch(`http://localhost:8080/api/groups/${group.id}/notes`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
-      
-      if (handleAuthError(response)) return;
-
-      if (response.ok) {
-        const data = await response.json();
-        setGroupNotes(data);
+      if (responseNotes.ok) {
+        const dataNotes = await responseNotes.json();
+        setGroupNotes(dataNotes);
+      }
+      const responseMembers = await fetch(`http://localhost:8080/api/groups/${group.id}/members`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (responseMembers.ok) {
+        const dataMembers = await responseMembers.json();
+        console.log("Members received from the server:", dataMembers);
+        setGroupMembers(dataMembers);
       }
     } catch (error) {
       console.error(error);
@@ -94,7 +101,8 @@ function GroupsPage() {
 
   const handleInviteMember = async (e) => {
     e.preventDefault();
-    if (!newMemberEmail) return;
+    const emailToSend = newMemberEmail.trim();
+    if (!emailToSend) return;
 
     try {
       const response = await fetch(`http://localhost:8080/api/groups/${selectedGroup.id}/members`, {
@@ -103,16 +111,26 @@ function GroupsPage() {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify({ email: newMemberEmail })
+        body: JSON.stringify({ email: emailToSend })
       });
 
       if (handleAuthError(response)) return;
 
+      const data = await response.json();
+
       if (response.ok) {
         setMessage('Member invited successfully!');
         setNewMemberEmail('');
+        
+        const responseMembers = await fetch(`http://localhost:8080/api/groups/${selectedGroup.id}/members`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (responseMembers.ok) {
+            setGroupMembers(await responseMembers.json());
+        }
+
       } else {
-        setMessage('Failed to invite member (User not found?)');
+        setMessage(data.message || 'Failed to invite member');
       }
     } catch (error) {
       console.error(error);
@@ -183,6 +201,60 @@ function GroupsPage() {
               <p>{selectedGroup.description}</p>
             </div>
 
+            <div className="group-members-section" style={{marginBottom: '20px', padding: '15px', backgroundColor: '#f0f4f8', borderRadius: '8px', border: '1px solid #dbe4eb'}}>
+                <h3 style={{margin: '0 0 10px 0', color: '#2c3e50', fontSize: '1.1rem'}}>
+                    👥 Group Members
+                </h3>
+                
+                {groupMembers.length > 0 ? (
+                    <div className="members-grid" style={{display: 'flex', flexWrap: 'wrap', gap: '10px'}}>
+                        {groupMembers.map(member => (
+                            <div key={member.id} className="member-chip" style={{
+                                display: 'flex', 
+                                alignItems: 'center', 
+                                gap: '10px', 
+                                padding: '8px 12px', 
+                                background: 'white', 
+                                borderRadius: '25px', 
+                                boxShadow: '0 2px 4px rgba(0,0,0,0.05)',
+                                border: '1px solid #eee'
+                            }}>
+                                {member.avatarUrl ? (
+                                    <img src={member.avatarUrl} alt="avatar" style={{width: '30px', height: '30px', borderRadius: '50%', objectFit: 'cover'}} />
+                                ) : (
+                                    <div style={{
+                                        width: '30px', 
+                                        height: '30px', 
+                                        borderRadius: '50%', 
+                                        background: '#3498db', 
+                                        color: 'white', 
+                                        display: 'flex', 
+                                        alignItems: 'center', 
+                                        justifyContent: 'center',
+                                        fontSize: '14px',
+                                        fontWeight: 'bold'
+                                    }}>
+                                        {(member.name ? member.name[0] : (member.email ? member.email[0] : '?')).toUpperCase()}
+                                    </div>
+                                )}
+                                <div style={{display: 'flex', flexDirection: 'column'}}>
+                                    <span style={{fontWeight: '600', fontSize: '0.9rem', color: '#333'}}>
+                                        {member.name || member.email.split('@')[0]}
+                                    </span>
+                                    {member.name && (
+                                        <span style={{fontSize: '0.75rem', color: '#7f8c8d'}}>
+                                            {member.email}
+                                        </span>
+                                    )}
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                ) : (
+                    <p style={{color: '#7f8c8d', fontStyle: 'italic'}}>No members found (Try inviting someone!)</p>
+                )}
+            </div>
+
             <div className="invite-section">
               <h3>Invite Colleagues</h3>
               <form onSubmit={handleInviteMember} style={{display: 'flex', gap: '10px'}}>
@@ -219,7 +291,7 @@ function GroupsPage() {
                         </button>
                     </div>
                     <div className="note-content-preview">
-                         {note.content.substring(0, 100)}...
+                          {note.content.substring(0, 100)}...
                     </div>
                     {note.attachmentUrl && <span style={{fontSize: '0.8rem', color: '#e91e63', marginTop:'5px', display:'block'}}>📎 Has attachment</span>}
                   </div>

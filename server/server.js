@@ -1,6 +1,6 @@
 const express = require('express');
 const sequelize = require('./db');
-const User = require('./models/User.js');
+const User = require('./models/User');
 const Subject = require('./models/Subject');
 const Note = require('./models/Note');
 const Group = require('./models/Group');
@@ -60,11 +60,9 @@ Group.belongsToMany(Note, { through: SharedNote });
 async function setupDatabase() {
   try {
     await sequelize.authenticate();
-    console.log('The connection with the database is a success.');
-    await sequelize.sync({ alter: true });
-    console.log('Models have been synchronized with the database.');
+    await sequelize.sync();
   } catch (error) {
-    console.error('Error connecting/syncing with the database: ', error);
+    console.error(error);
   }
 }
 
@@ -262,15 +260,40 @@ app.post('/api/groups', authenticateToken, async (req, res) => {
   }
 });
 
+app.get('/api/groups/:groupId/members', authenticateToken, async (req, res) => {
+    try {
+      const group = await Group.findByPk(req.params.groupId);
+      
+      if (!group) return res.status(404).json({ message: "Group not found" });
+
+      const isMember = await group.hasUser(req.user.id);
+      if (!isMember) return res.status(403).json({ message: "Not authorized" });
+
+      const members = await group.getUsers({
+          attributes: ['id', 'name', 'email'],
+          joinTableAttributes: [] 
+      });
+
+      res.json(members);
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ error: error.message });
+    }
+});
+
 app.post('/api/groups/:groupId/members', authenticateToken, async (req, res) => {
     try {
       const { email } = req.body;
       const group = await Group.findByPk(req.params.groupId);
       
-      const currentUserGroups = await req.user.getGroups({ where: { id: req.params.groupId }});
-      if (!currentUserGroups.length) return res.status(403).json({ message: "Not authorized" });
+      if (!group) return res.status(404).json({ message: "Group not found" });
+
+      const isMember = await group.hasUser(req.user.id);
+      if (!isMember) return res.status(403).json({ message: "Not authorized" });
   
-      const userToAdd = await User.findOne({ where: { email } });
+      const emailCautat = email ? email.trim().toLowerCase() : '';
+      const userToAdd = await User.findOne({ where: { email: emailCautat } });
+
       if (!userToAdd) return res.status(404).json({ message: "User not found" });
   
       await group.addUser(userToAdd);

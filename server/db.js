@@ -1,9 +1,8 @@
 const { Sequelize } = require('sequelize');
 
-const sequelize = new Sequelize('notes_db', 'postgres', '1', {
-  host: 'localhost',
-  dialect: 'postgres', 
-  port: 5432,
+const sequelize = new Sequelize({
+  dialect: 'sqlite',
+  storage: './database.sqlite',
   logging: false
 });
 
