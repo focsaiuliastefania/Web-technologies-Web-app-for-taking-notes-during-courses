@@ -1,4 +1,3 @@
-// In /server/db.js
 const { Sequelize } = require('sequelize');
 
 const sequelize = new Sequelize('notes_db', 'postgres', '1', {

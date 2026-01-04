@@ -2,9 +2,10 @@ import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import Layout from './components/Layout';
 import LoginPage from './pages/LoginPage';
-import DashboardPage from './pages/DashBoardPage';
+import DashboardPage from './pages/DashBoardPage'; 
 import AuthCallbackPage from './pages/AuthCallbackPage';
 import SubjectNotesPage from './pages/SubjectNotesPage';
+import GroupsPage from './pages/GroupsPage';
 import ProtectedRoute from './components/ProtectedRoute';
 
 const useAuth = () => {
@@ -31,6 +32,17 @@ function App() {
             <ProtectedRoute>
               <Layout>
                 <DashboardPage />
+              </Layout>
+            </ProtectedRoute>
+          } 
+        />
+
+        <Route 
+          path="/groups" 
+          element={
+            <ProtectedRoute>
+              <Layout>
+                <GroupsPage />
               </Layout>
             </ProtectedRoute>
           } 

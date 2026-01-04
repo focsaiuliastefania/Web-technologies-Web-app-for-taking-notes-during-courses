@@ -7,8 +7,8 @@
 }
 
 .navbar {
-  width: 100%; /* Ocupă toată lățimea ecranului */
-  box-sizing: border-box; /* Asigură că padding-ul nu lățește bara peste 100% */
+  width: 100%;
+  box-sizing: border-box;
   background-color: var(--pink-dark);
   color: var(--text-on-pink);
   padding: 1rem 2rem;
@@ -17,8 +17,6 @@
   align-items: center;
   box-shadow: 0 2px 4px rgba(0,0,0,0.1);
   
-  /* Opțional: Poziție fixă dacă vrei să rămână sus când dai scroll */
-  /* position: sticky; top: 0; z-index: 1000; */
 }
 
 .navbar-brand {
