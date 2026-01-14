@@ -1,11 +1,13 @@
 const express = require('express');
 const sequelize = require('./db');
-const User = require('./models/User');
-const Subject = require('./models/Subject');
-const Note = require('./models/Note');
-const Group = require('./models/Group');
-const GroupMember = require('./models/GroupMember');
-const SharedNote = require('./models/SharedNote');
+
+const User = require('./models/user');
+const Subject = require('./models/subject');
+const Note = require('./models/note');
+const Group = require('./models/group');
+const GroupMember = require('./models/groupMember'); 
+const SharedNote = require('./models/sharedNote');
+
 const passport = require('passport');
 const jwt = require('jsonwebtoken');
 const cors = require('cors');
