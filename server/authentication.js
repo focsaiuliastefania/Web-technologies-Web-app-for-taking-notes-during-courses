@@ -1,6 +1,6 @@
 const passport = require("passport");
 const GoogleStrategy = require("passport-google-oauth20").Strategy;
-const User = require("./models/user"); 
+const User = require('./models/user');
 
 require("dotenv").config();
 
@@ -10,7 +10,7 @@ passport.use(
       clientID: process.env.GOOGLE_CLIENT_ID,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET,
 
-      callbackURL: "http://localhost:8080/api/auth/google/callback",
+      callbackURL: "https://web-technologies-web-app-for-taking.onrender.com/api/auth/google/callback",
     },
     async (accessToken, refreshToken, profile, done) => {
       try {

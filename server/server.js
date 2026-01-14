@@ -190,7 +190,7 @@ app.post('/api/subjects/:subjectId/notes', authenticateToken, upload.single('att
     let attachmentUrl = null;
 
     if (req.file) {
-        attachmentUrl = `http://localhost:8080/uploads/${req.file.filename}`;
+        attachmentUrl = `https://web-technologies-web-app-for-taking.onrender.com/uploads/${req.file.filename}`;
     }
 
     const newNote = await Note.create({

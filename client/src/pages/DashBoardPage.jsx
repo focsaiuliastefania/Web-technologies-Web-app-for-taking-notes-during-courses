@@ -23,7 +23,7 @@ function DashboardPage() {
 
   const fetchSubjects = async () => {
     try {
-      const response = await fetch('http://localhost:8080/api/subjects', {
+      const response = await fetch('https://web-technologies-web-app-for-taking.onrender.com/api/subjects', {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -47,7 +47,7 @@ function DashboardPage() {
     if (!newSubject.name) return;
 
     try {
-      const response = await fetch('http://localhost:8080/api/subjects', {
+      const response = await fetch('https://web-technologies-web-app-for-taking.onrender.com/api/subjects', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -72,7 +72,7 @@ function DashboardPage() {
     if(!confirm('Are you sure you want to delete this subject?')) return;
 
     try {
-      const response = await fetch(`http://localhost:8080/api/subjects/${id}`, {
+      const response = await fetch(`https://web-technologies-web-app-for-taking.onrender.com/api/subjects/${id}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -103,7 +103,7 @@ function DashboardPage() {
     if (!editFormData.name) return;
 
     try {
-      const response = await fetch(`http://localhost:8080/api/subjects/${editingId}`, {
+      const response = await fetch(`https://web-technologies-web-app-for-taking.onrender.com/api/subjects/${editingId}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',

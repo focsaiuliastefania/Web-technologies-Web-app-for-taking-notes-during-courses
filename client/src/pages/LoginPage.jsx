@@ -1,6 +1,6 @@
 import React from "react";
 function LoginPage(){
-const GOOGLE_AUTH_URL = 'http://localhost:8080/api/auth/google';
+const GOOGLE_AUTH_URL = 'https://web-technologies-web-app-for-taking.onrender.com/api/auth/google';
 
   return (
     <div>

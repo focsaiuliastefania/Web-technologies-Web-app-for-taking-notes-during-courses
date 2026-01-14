@@ -50,7 +50,7 @@ function SubjectNotesPage() {
   const fetchData = useCallback(async (query = '') => {
     setIsLoading(true);
     try {
-      let url = `http://localhost:8080/api/subjects/${subjectId}/notes`;
+      let url = `https://web-technologies-web-app-for-taking.onrender.com/api/subjects/${subjectId}/notes`;
       if (query) url += `?search=${query}`;
       const response = await fetch(url, { headers: { 'Authorization': `Bearer ${token}` } });
       
@@ -66,7 +66,7 @@ function SubjectNotesPage() {
 
   const fetchGroups = async () => {
     try {
-        const response = await fetch('http://localhost:8080/api/groups', {
+        const response = await fetch('https://web-technologies-web-app-for-taking.onrender.com/api/groups', {
             headers: { 'Authorization': `Bearer ${token}` }
         });
         
@@ -84,7 +84,7 @@ function SubjectNotesPage() {
   const handleShareNote = async () => {
       if(!selectedGroupId) return;
       try {
-          const response = await fetch(`http://localhost:8080/api/notes/${selectedNote.id}/share`, {
+          const response = await fetch(`https://web-technologies-web-app-for-taking.onrender.com/api/notes/${selectedNote.id}/share`, {
               method: 'POST',
               headers: {
                   'Content-Type': 'application/json',
@@ -128,7 +128,7 @@ function SubjectNotesPage() {
     }
 
     try {
-      const response = await fetch(`http://localhost:8080/api/subjects/${subjectId}/notes`, {
+      const response = await fetch(`https://web-technologies-web-app-for-taking.onrender.com/api/subjects/${subjectId}/notes`, {
         method: 'POST',
         headers: { 
             'Authorization': `Bearer ${token}` 
@@ -151,7 +151,7 @@ function SubjectNotesPage() {
     if (e) e.stopPropagation();
     if(!confirm('Delete this note?')) return;
     try {
-      const response = await fetch(`http://localhost:8080/api/notes/${noteId}`, {
+      const response = await fetch(`https://web-technologies-web-app-for-taking.onrender.com/api/notes/${noteId}`, {
         method: 'DELETE', headers: { 'Authorization': `Bearer ${token}` }
       });
       
@@ -173,7 +173,7 @@ function SubjectNotesPage() {
   const handleUpdateNote = async () => {
       if (!editFormData.title) return;
       try {
-          const response = await fetch(`http://localhost:8080/api/notes/${selectedNote.id}`, {
+          const response = await fetch(`https://web-technologies-web-app-for-taking.onrender.com/api/notes/${selectedNote.id}`, {
               method: 'PUT',
               headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
               body: JSON.stringify(editFormData)
