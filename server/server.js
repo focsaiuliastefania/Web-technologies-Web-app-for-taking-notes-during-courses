@@ -20,9 +20,12 @@ require('./authentication.js');
 
 const app = express();
 
+const CLIENT_URL = process.env.CLIENT_URL || 'http://localhost:5173';
+const SERVER_URL = process.env.SERVER_URL || 'http://localhost:8080';
+
 
 app.use(cors({
-  origin: ['http://localhost:5173', 'https://web-app-for-taking-notes-during-courses.onrender.com'],
+  origin: [CLIENT_URL, 'http://localhost:5173', 'https://web-technologies-web-app-for-taking.onrender.com'],
   methods: ['GET', 'POST', 'DELETE', 'PUT'],
   credentials: true
 }));
@@ -102,7 +105,7 @@ app.get('/api/auth/google/callback',
       { expiresIn: '1d' }
     );
     
-    res.redirect(`${process.env.CLIENT_URL}/auth-success?token=${token}`);
+    res.redirect(`${CLIENT_URL}/auth-success?token=${token}`);
   }
 );
 
@@ -193,9 +196,9 @@ app.post('/api/subjects/:subjectId/notes', authenticateToken, upload.single('att
     let attachmentUrl = null;
 
   
-    const baseUrl = process.env.NODE_ENV === 'production' 
-        ? 'https://web-app-for-taking-notes-during-courses.onrender.com'
-        : 'http://localhost:8080';
+  const baseUrl = process.env.NODE_ENV === 'production' 
+    ? SERVER_URL
+    : 'http://localhost:8080';
 
     if (req.file) {
         attachmentUrl = `${baseUrl}/uploads/${req.file.filename}`;

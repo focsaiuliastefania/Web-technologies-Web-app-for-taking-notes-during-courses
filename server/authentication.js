@@ -10,7 +10,7 @@ passport.use(
       clientID: process.env.GOOGLE_CLIENT_ID,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET,
 
-      callbackURL: "https://web-technologies-web-app-for-taking.onrender.com/api/auth/google/callback",
+      callbackURL: `${process.env.SERVER_URL || 'http://localhost:8080'}/api/auth/google/callback`,
     },
     async (accessToken, refreshToken, profile, done) => {
       try {
