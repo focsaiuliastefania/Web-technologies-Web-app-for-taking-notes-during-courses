@@ -12,6 +12,8 @@ function DashboardPage() {
   const token = localStorage.getItem('authToken');
   const navigate = useNavigate();
 
+  const API_URL = import.meta.env.VITE_API_URL;
+
   const handleAuthError = (response) => {
     if (response.status === 401 || response.status === 403) {
       localStorage.removeItem('authToken');
@@ -23,7 +25,7 @@ function DashboardPage() {
 
   const fetchSubjects = async () => {
     try {
-      const response = await fetch('https://web-technologies-web-app-for-taking.onrender.com/api/subjects', {
+      const response = await fetch(`${API_URL}/api/subjects`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -47,7 +49,7 @@ function DashboardPage() {
     if (!newSubject.name) return;
 
     try {
-      const response = await fetch('https://web-technologies-web-app-for-taking.onrender.com/api/subjects', {
+      const response = await fetch(`${API_URL}/api/subjects`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -72,7 +74,7 @@ function DashboardPage() {
     if(!confirm('Are you sure you want to delete this subject?')) return;
 
     try {
-      const response = await fetch(`https://web-technologies-web-app-for-taking.onrender.com/api/subjects/${id}`, {
+      const response = await fetch(`${API_URL}/api/subjects/${id}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -103,7 +105,7 @@ function DashboardPage() {
     if (!editFormData.name) return;
 
     try {
-      const response = await fetch(`https://web-technologies-web-app-for-taking.onrender.com/api/subjects/${editingId}`, {
+      const response = await fetch(`${API_URL}/api/subjects/${editingId}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -192,13 +194,13 @@ function DashboardPage() {
                       onClick={handleUpdateSubject}
                       style={{backgroundColor: '#e91e63', color: 'white', border: 'none', padding: '6px 12px', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold'}}
                    >
-                     Save
+                      Save
                    </button>
                    <button 
                       onClick={cancelEditing}
                       style={{backgroundColor: '#ccc', color: 'black', border: 'none', padding: '6px 12px', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold'}}
                    >
-                     Cancel
+                      Cancel
                    </button>
                 </div>
               </div>
@@ -228,7 +230,7 @@ function DashboardPage() {
                       }}
                       title="Edit"
                    >
-                     ✏️
+                      ✏️
                    </button>
                    <button 
                       className="delete-btn" 

@@ -1,6 +1,9 @@
 import React from "react";
-function LoginPage(){
-const GOOGLE_AUTH_URL = 'https://web-technologies-web-app-for-taking.onrender.com/api/auth/google';
+
+function LoginPage() {
+  const API_URL = import.meta.env.VITE_API_URL;
+
+  const GOOGLE_AUTH_URL = `${API_URL}/api/auth/google`;
 
   return (
     <div>
@@ -13,4 +16,5 @@ const GOOGLE_AUTH_URL = 'https://web-technologies-web-app-for-taking.onrender.co
     </div>
   );
 }
+
 export default LoginPage;

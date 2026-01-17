@@ -19,6 +19,7 @@ function SubjectNotesPage() {
   const subjectName = location.state?.subjectName || 'Subject';
   
   const [notes, setNotes] = useState([]);
+  const [filteredNotes, setFilteredNotes] = useState([]);
   
   const [newNote, setNewNote] = useState({ title: '', content: '', tags: '' });
   const [attachment, setAttachment] = useState(null);
@@ -38,6 +39,9 @@ function SubjectNotesPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(8); 
 
+  
+  const API_URL = import.meta.env.VITE_API_URL;
+
   const handleAuthError = useCallback((response) => {
     if (response.status === 401 || response.status === 403) {
       localStorage.removeItem('authToken');
@@ -47,11 +51,12 @@ function SubjectNotesPage() {
     return false;
   }, [navigate]);
 
-  const fetchData = useCallback(async (query = '') => {
+  const fetchData = useCallback(async () => {
     setIsLoading(true);
     try {
-      let url = `https://web-technologies-web-app-for-taking.onrender.com/api/subjects/${subjectId}/notes`;
-      if (query) url += `?search=${query}`;
+     
+      let url = `${API_URL}/api/subjects/${subjectId}/notes`;
+      
       const response = await fetch(url, { headers: { 'Authorization': `Bearer ${token}` } });
       
       if (handleAuthError(response)) return;
@@ -59,14 +64,16 @@ function SubjectNotesPage() {
       if (response.ok) {
         const data = await response.json();
         setNotes(data);
+        setFilteredNotes(data);
       }
     } catch (error) { console.error(error); } 
     finally { setIsLoading(false); }
-  }, [subjectId, token, handleAuthError]);
+  }, [subjectId, token, handleAuthError, API_URL]);
 
   const fetchGroups = async () => {
     try {
-        const response = await fetch('https://web-technologies-web-app-for-taking.onrender.com/api/groups', {
+        
+        const response = await fetch(`${API_URL}/api/groups`, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
         
@@ -81,10 +88,30 @@ function SubjectNotesPage() {
 
   useEffect(() => { fetchData(); }, [fetchData]); 
 
+  const handleSearch = (e) => {
+    e.preventDefault();
+    setCurrentPage(1);
+
+    if (!searchQuery.trim()) {
+        setFilteredNotes(notes);
+        return;
+    }
+
+    const query = searchQuery.toLowerCase();
+    const results = notes.filter(note => {
+        const titleMatch = note.title.toLowerCase().includes(query);
+        const tagsMatch = note.tags && note.tags.toLowerCase().includes(query);
+        return titleMatch || tagsMatch;
+    });
+
+    setFilteredNotes(results);
+  };
+
   const handleShareNote = async () => {
       if(!selectedGroupId) return;
       try {
-          const response = await fetch(`https://web-technologies-web-app-for-taking.onrender.com/api/notes/${selectedNote.id}/share`, {
+         
+          const response = await fetch(`${API_URL}/api/notes/${selectedNote.id}/share`, {
               method: 'POST',
               headers: {
                   'Content-Type': 'application/json',
@@ -107,13 +134,13 @@ function SubjectNotesPage() {
 
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-  const currentNotes = notes.slice(indexOfFirstItem, indexOfLastItem);
-  const totalPages = Math.ceil(notes.length / itemsPerPage);
+  const currentNotes = filteredNotes.slice(indexOfFirstItem, indexOfLastItem);
+  const totalPages = Math.ceil(filteredNotes.length / itemsPerPage);
   
   const nextPage = () => currentPage < totalPages && setCurrentPage(currentPage + 1);
   const prevPage = () => currentPage > 1 && setCurrentPage(currentPage - 1);
   const handleItemsPerPageChange = (e) => { setItemsPerPage(Number(e.target.value)); setCurrentPage(1); };
-  const handleSearch = (e) => { e.preventDefault(); fetchData(searchQuery); setCurrentPage(1); };
+  
   
   const handleAddNote = async (e) => {
     e.preventDefault();
@@ -128,7 +155,8 @@ function SubjectNotesPage() {
     }
 
     try {
-      const response = await fetch(`https://web-technologies-web-app-for-taking.onrender.com/api/subjects/${subjectId}/notes`, {
+      
+      const response = await fetch(`${API_URL}/api/subjects/${subjectId}/notes`, {
         method: 'POST',
         headers: { 
             'Authorization': `Bearer ${token}` 
@@ -142,7 +170,7 @@ function SubjectNotesPage() {
           setNewNote({ title: '', content: '', tags: '' }); 
           setAttachment(null);
           document.getElementById('fileInput').value = "";
-          fetchData(searchQuery); 
+          fetchData(); 
       }
     } catch (error) { console.error(error); }
   };
@@ -151,7 +179,8 @@ function SubjectNotesPage() {
     if (e) e.stopPropagation();
     if(!confirm('Delete this note?')) return;
     try {
-      const response = await fetch(`https://web-technologies-web-app-for-taking.onrender.com/api/notes/${noteId}`, {
+    
+      const response = await fetch(`${API_URL}/api/notes/${noteId}`, {
         method: 'DELETE', headers: { 'Authorization': `Bearer ${token}` }
       });
       
@@ -160,6 +189,7 @@ function SubjectNotesPage() {
       if (response.ok) {
         const updatedNotes = notes.filter(n => n.id !== noteId);
         setNotes(updatedNotes);
+        setFilteredNotes(prev => prev.filter(n => n.id !== noteId));
         if (selectedNote?.id === noteId) { setSelectedNote(null); setIsEditing(false); }
       }
     } catch (error) { console.error(error); }
@@ -173,7 +203,8 @@ function SubjectNotesPage() {
   const handleUpdateNote = async () => {
       if (!editFormData.title) return;
       try {
-          const response = await fetch(`https://web-technologies-web-app-for-taking.onrender.com/api/notes/${selectedNote.id}`, {
+        
+          const response = await fetch(`${API_URL}/api/notes/${selectedNote.id}`, {
               method: 'PUT',
               headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
               body: JSON.stringify(editFormData)
@@ -184,6 +215,8 @@ function SubjectNotesPage() {
           if (response.ok) {
               const updated = await response.json();
               setNotes(notes.map(n => n.id === selectedNote.id ? updated : n));
+              setFilteredNotes(prev => prev.map(n => n.id === selectedNote.id ? updated : n));
+              
               setSelectedNote(updated);
               setIsEditing(false);
           }
@@ -242,7 +275,7 @@ function SubjectNotesPage() {
             ))}
             </div>
 
-            {notes.length > 0 && (
+            {filteredNotes.length > 0 && (
                 <div className="pagination-controls" style={{marginTop: '20px', display: 'flex', justifyContent: 'center', gap: '15px', alignItems: 'center'}}>
                     <button onClick={prevPage} disabled={currentPage === 1} className="btn-search" style={{opacity: currentPage === 1 ? 0.5 : 1}}>
                         Previous
@@ -257,6 +290,10 @@ function SubjectNotesPage() {
                         <option value={32}>32 / page</option>
                     </select>
                 </div>
+            )}
+            
+            {filteredNotes.length === 0 && notes.length > 0 && (
+                 <p style={{textAlign: 'center', marginTop: '20px'}}>No notes match your search.</p>
             )}
         </>
       )}
@@ -296,11 +333,11 @@ function SubjectNotesPage() {
                             {selectedNote.attachmentUrl && (
                                 <div style={{marginTop: '20px', padding: '10px', borderTop: '1px solid #eee'}}>
                                     <a 
-                                        href={selectedNote.attachmentUrl} 
-                                        target="_blank" 
-                                        rel="noopener noreferrer"
-                                        className="btn-search"
-                                        style={{textDecoration: 'none', display: 'inline-block'}}
+                                            href={selectedNote.attachmentUrl} 
+                                            target="_blank" 
+                                            rel="noopener noreferrer"
+                                            className="btn-search"
+                                            style={{textDecoration: 'none', display: 'inline-block'}}
                                     >
                                         📎 Download / View Attachment
                                     </a>
